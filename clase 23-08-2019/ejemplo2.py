@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import linprog
-
+# https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html
 # https://stackoverflow.com/questions/45873783/python-linprog-minimization-simplex-method
 """
 Ejemplo 1
