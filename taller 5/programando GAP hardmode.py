@@ -160,7 +160,7 @@ def gap(c, A_ub, b_ub, A_eq, b_eq, intVars=["x1"], is_maximize=False, decimals=1
 				res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
 
 				# Update extra actions in label node
-				varInts=[i+":"+str(res.x[int(i[1:])]) for i in actions]
+				varInts=[i+":"+str(res.x[int(i[1:])-1]) for i in actions]
 				G.nodes[nodeI]["label"]=(str(nodeI)+"\n"+str(varInts)[1:-1]+"\n"+"Objective"+str(round(res.get("fun")*factor, decimals))).replace("None", "").replace(",", "\n")
 
 				if(not res.get("success")):
