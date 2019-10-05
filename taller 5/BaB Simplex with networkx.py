@@ -1,4 +1,4 @@
-
+# Branch And Bound
 from scipy.optimize import linprog
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html
 # https://stackoverflow.com/questions/45873783/python-linprog-minimization-simplex-method
@@ -16,6 +16,27 @@ import numpy as np
 # https://github.com/CristiFati/Prebuilt-Binaries/tree/master/Windows/PyGraphviz
 # Graphviz 64 bit windows
 # https://github.com/mahkoCosmo/GraphViz_x64/
+
+def draw_graph_states(G, iteration):
+	plt.figure(iteration)
+	plt.title("BaBSimplex {}".format(iteration), fontsize=16)
+
+	# set edge colors
+	nx.set_edge_attributes(G, "black", "color")
+
+	# pos with graphviz
+	pos=nx.nx_agraph.pygraphviz_layout(G, prog='dot')
+
+	edge_labels = nx.get_edge_attributes(G,'action')
+	node_colors=nx.get_node_attributes(G,'color')
+	edge_colors=nx.get_edge_attributes(G,'color')
+
+	node_labels=nx.get_node_attributes(G,'label')
+
+	nx.draw(G, pos, labels=node_labels, edge_color=edge_colors.values(), node_color=node_colors.values(),with_labels=True, font_weight='bold')
+
+	#pos[0]=pos[0]+0.2
+	nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, with_labels=True, font_weight='bold')
 
 def printStep(stepName, varNames, res, decimals, width=50):
 	print("Operation {}".format(stepName).center(width, "-"))
@@ -73,7 +94,7 @@ def get_actions(G, startNode, intVars):
 
 
 
-def gap(c, A_ub, b_ub, A_eq, b_eq, intVars=["x1"], is_maximize=False, decimals=10):
+def BaBSimplex(c, A_ub, b_ub, A_eq, b_eq, intVars=["x1"], is_maximize=False, decimals=10):
 	# number of variables from model
 	numberVars=len(c)
 
@@ -111,6 +132,7 @@ def gap(c, A_ub, b_ub, A_eq, b_eq, intVars=["x1"], is_maximize=False, decimals=1
 
 	# Get answers for root node
 	res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
+	
 	# var control
 	iteration=0
 	
@@ -124,14 +146,13 @@ def gap(c, A_ub, b_ub, A_eq, b_eq, intVars=["x1"], is_maximize=False, decimals=1
 
 	G.add_nodes_from([[iteration, {"color":colorUnsolved, "parent":None, "objective":res.get("fun")*factor}]])
 	printStep("{} phase root".format(iteration), varNames, res, decimals)
+	draw_graph_states(G, iteration)
 	iteration+=1
 	
-	# Format Parent, toSolve
-	# stack=[[None,iteration]]
+	
+	
 	while colorUnsolved in nx.get_node_attributes(G,'color').values():
 		
-		# iterStack=stack.copy()
-		# stack.clear()
 
 		# Control for iterations, because graph change for each iteration (only add nodes)
 		IterationsNodes=list(G.nodes())
@@ -169,9 +190,8 @@ def gap(c, A_ub, b_ub, A_eq, b_eq, intVars=["x1"], is_maximize=False, decimals=1
 					
 					G.nodes[nodeI]["color"]=colorFailed
 					G.nodes[nodeI]["objective"]=round(res.get("fun")*factor, decimals)
+					draw_graph_states(G, nodeI)
 					continue
-					# G.add_nodes_from([[iteration, {"color":colorFailed}, "parent":nodeParent]])
-					# iteration+=1
 
 				# set intVars in All int
 				intVars=intVarsBase.copy()
@@ -199,8 +219,7 @@ def gap(c, A_ub, b_ub, A_eq, b_eq, intVars=["x1"], is_maximize=False, decimals=1
 						print("Worst objective")
 						G.nodes[nodeI]["color"]=colorWorst
 						G.nodes[nodeI]["objective"]=round(res.get("fun")*factor, decimals)
-						# G.add_nodes_from([[iteration, {"color":colorWorst}, "parent":nodeParent]])
-						# iteration+=1
+						draw_graph_states(G, nodeI)
 						continue
 
 					for varName in intVars:
@@ -216,14 +235,14 @@ def gap(c, A_ub, b_ub, A_eq, b_eq, intVars=["x1"], is_maximize=False, decimals=1
 							G.add_nodes_from([[iteration, {"color":colorUnsolved, "parent":nodeI}]])
 							G.add_edges_from([[nodeI, iteration, {"action":varName+"|>="+str(int(res.x[int(varName[1:])-1])+1)}]])
 							iteration+=1
+							draw_graph_states(G, nodeI)
 							break
 				else:
 					printStep(nodeI, varNames, res, decimals)
 					print("found with integer values")
-					### "objective":res.get("fun")
-					# G.add_nodes_from([[iteration, {"color":colorPossibleSolution, "objective":res.get("fun")}]])
 					G.nodes[nodeI]["color"]=colorPossibleSolution
 					G.nodes[nodeI]["objective"]=round(res.get("fun")*factor, decimals)
+					draw_graph_states(G, nodeI)
 
 					
 
@@ -338,25 +357,10 @@ if __name__ == "__main__":
 	# is maximize process or not (minimize)
 	is_maximize=False
 
-	G=gap(c, A_ub, b_ub, A_eq, b_eq, intVars, is_maximize, decimals=10)
+	G=BaBSimplex(c, A_ub, b_ub, A_eq, b_eq, intVars, is_maximize, decimals=10)
 
-
-	# set edge colors
-	nx.set_edge_attributes(G, "black", "color")
-
-	# pos with graphviz
-	pos=nx.nx_agraph.pygraphviz_layout(G, prog='dot')
-
-	edge_labels = nx.get_edge_attributes(G,'action')
-	node_colors=nx.get_node_attributes(G,'color')
-	edge_colors=nx.get_edge_attributes(G,'color')
-
-	node_labels=nx.get_node_attributes(G,'label')
-
-	nx.draw(G, pos, labels=node_labels, edge_color=edge_colors.values(), node_color=node_colors.values(),with_labels=True, font_weight='bold')
-
-	#pos[0]=pos[0]+0.2
-	nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, with_labels=True, font_weight='bold')
+	draw_graph_states(G, "Finished")
+	
 	plt.show()
 
 	
