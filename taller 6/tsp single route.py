@@ -28,7 +28,7 @@ def create_data_model():
 		[1972, 579, 1260, 987, 371, 999, 701, 2099, 600, 1162, 1200, 504, 0],
 	]  # yapf: disable
 	data['num_vehicles'] = 1
-	data['depot'] = 0
+	data['depot'] = 3
 	return data
 
 
@@ -75,8 +75,10 @@ def main():
 
 	# Setting first solution heuristic.
 	search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-	search_parameters.first_solution_strategy = (
-		routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+	search_parameters.local_search_metaheuristic = (
+		routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH)
+	search_parameters.time_limit.seconds = 30
+	search_parameters.log_search = True
 
 	# Solve the problem.
 	assignment = routing.SolveWithParameters(search_parameters)

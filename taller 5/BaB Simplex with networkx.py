@@ -292,10 +292,12 @@ if __name__ == "__main__":
 	Subject to:     x_1 - 2x_2 + x_3 = 5/2
 					2x_1 + x_2 +x_4 = 3/2
 					
-					x_3 >=3
+					x_2 >=-1 # Restriction 1
 					
-					x_2 >=1
+					x_3 >=-3 # Restriction 2
 					
+					
+					# integrality
 					x_1, x_2, x_3, x_4 >= 0
 
 					x_2 , x_3 son enteros
@@ -329,7 +331,7 @@ if __name__ == "__main__":
 
 	# Resticctions part rigth of '<='
 	b_ub = np.array(
-		[3, 1, 0, 0, 0, 0]#, 2]
+		[3, 1, 0, 0, 0, 0]
 	)
 
 	A_eq = np.array(
@@ -352,7 +354,7 @@ if __name__ == "__main__":
 	)
 
 	# Indicates what vars are integer 
-	intVars=["x2", "x3"]
+	intVars=["x1", "x3"]
 
 	# is maximize process or not (minimize)
 	is_maximize=False
